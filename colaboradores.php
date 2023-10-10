@@ -20,68 +20,52 @@ if (isset($_SESSION['iduser'])) {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
-    // Função para obter o idcolabora com base no nome do colaborador
-    function getIdColaborador($conn, $nomeColaborador) {
-        // Consulta SQL para obter o idcolabora com base no nome do colaborador
-        $sql = "SELECT idcolabora FROM colaborador WHERE nome = '$nomeColaborador'";
-        
-        // Executa a consulta
-        $result = $conn->query($sql);
-        
-        // Verifica se há resultados e retorna o idcolabora
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            return $row['idcolabora'];
-        } else {
-            return null;
-        }
-    }
-
-    // Verificar o tipo de ID recebido (idturma, idcurso, idfacul)
-    if (isset($_GET['idturma'])) {
-        // ID é do tipo idturma
-        $idturma = $_GET['idturma'];
-
-        // Consulta SQL para obter colaboradores com base no idturma
-        $sql = "SELECT colaborador.nome FROM colaborador WHERE colaborador.idturma = $idturma";
-    } elseif (isset($_GET['idcurso'])) {
-        // ID é do tipo idcurso
-        $idcurso = $_GET['idcurso'];
-
-        // Consulta SQL para obter colaboradores com base no idcurso
-        $sql = "SELECT colaborador.nome
-                FROM colaborador
-                INNER JOIN cursos ON colaborador.idcordenador = cursos.idcurso
-                WHERE cursos.idcurso = $idcurso";
-    } elseif (isset($_GET['idfacul'])) {
-        // ID é do tipo idfacul
+    // Verificar se um parâmetro 'idfacul' ou 'idcurso' está presente na URL
+    if (isset($_GET['idfacul'])) {
         $idfacul = $_GET['idfacul'];
 
-        // Consulta SQL para obter colaboradores com base no idfacul
-        $sql = "SELECT colaborador.nome
-                FROM colaborador
-                INNER JOIN cursos ON colaborador.idcordenador = cursos.idcurso
-                INNER JOIN faculdade ON cursos.idfacul = faculdade.idfacul
-                WHERE faculdade.idfacul = $idfacul";
-    } else {
-        echo "Tipo de ID não especificado.";
-        exit;
-    }
+        // Consulta SQL para obter os colaboradores da faculdade selecionada
+        $sql_colaboradores = "SELECT * FROM colaborador WHERE idcolabora IN (SELECT idcolabora FROM participa WHERE idcurso IN (SELECT idcurso FROM cursos WHERE idfacul = $idfacul))";
+        $result_colaboradores = $conn->query($sql_colaboradores);
 
-    // Executar a consulta SQL
-    $result = $conn->query($sql);
+        if (!$result_colaboradores) {
+            die("Erro na consulta SQL: " . $conn->error);
+        }
 
-    if ($result->num_rows > 0) {
-        $colaboradores = array();
-        while ($row_colaborador = $result->fetch_assoc()) {
-            $nomeColaborador = $row_colaborador['nome'];
-            $idcolabora = getIdColaborador($conn, $nomeColaborador);
-            
-            // Cria um link clicável para redirecionar para res_colaborador.php com o idcolabora
-            $colaboradores[] = "<a href='res_colaborador.php?idcolabora=$idcolabora'>$nomeColaborador</a>";
+        if ($result_colaboradores->num_rows > 0) {
+            $colaboradores = array();
+            while ($row_colaborador = $result_colaboradores->fetch_assoc()) {
+                $idcolabora = $row_colaborador['idcolabora'];
+                $nomecolabora = $row_colaborador['nome'];
+                $colaboradores[] = "<a href='res_colab.php?idcolabora=$idcolabora'>$nomecolabora</a>";
+            }
+        } else {
+            $colaboradores = array("Nenhum colaborador encontrado para esta faculdade.");
+        }
+    } elseif (isset($_GET['idcurso'])) {
+        $idcurso = $_GET['idcurso'];
+
+        // Consulta SQL para obter os colaboradores do curso selecionado
+        $sql_colaboradores = "SELECT * FROM colaborador WHERE idcolabora IN (SELECT idcolabora FROM participa WHERE idcurso = $idcurso)";
+        $result_colaboradores = $conn->query($sql_colaboradores);
+
+        if (!$result_colaboradores) {
+            die("Erro na consulta SQL: " . $conn->error);
+        }
+
+        if ($result_colaboradores->num_rows > 0) {
+            $colaboradores = array();
+            while ($row_colaborador = $result_colaboradores->fetch_assoc()) {
+                $idcolabora = $row_colaborador['idcolabora'];
+                $nomecolabora = $row_colaborador['nome'];
+                $colaboradores[] = "<a href='res_colab.php?idcolabora=$idcolabora'>$nomecolabora</a>";
+            }
+        } else {
+            $colaboradores = array("Nenhum colaborador encontrado para este curso.");
         }
     } else {
-        $colaboradores = array("Nenhum colaborador encontrado com base no ID fornecido.");
+        echo "ID da faculdade ou curso não especificado.";
+        exit;
     }
 ?>
 
@@ -108,7 +92,10 @@ if (isset($_SESSION['iduser'])) {
                 <a class="nav-link" href="faculdade.php">Faculdades</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Contato</a>
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
             </li>
         </ul>
     </div>

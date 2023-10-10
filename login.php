@@ -8,22 +8,26 @@ $senha = $credenciais["password"];
 $banco = $credenciais["dbname"];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $usuario_entrada = addslashes($_POST["usuario"]);
-    $senha_entrada = addslashes($_POST["senha"]);
+    // Validar entrada de usuário
+    $usuario_entrada = filter_input(INPUT_POST, "usuario", FILTER_SANITIZE_STRING);
+    $senha_entrada = $_POST["senha"];
 
-    $pdo = new PDO("mysql:dbname=".$banco.";host=".$endereco, $usuario, $senha);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    if (empty($usuario_entrada) || empty($senha_entrada)) {
+        // Exibir mensagem de erro se o usuário ou senha estiverem em branco
+        echo "<script>alert('Usuário e senha são obrigatórios.');</script>";
+    } else {
+        try {
+            $pdo = new PDO("mysql:dbname=".$banco.";host=".$endereco, $usuario, $senha);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-    try {
-        $sql = "SELECT iduser, senha_criptografada, nivel FROM usuarios WHERE usuario = :usuario";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':usuario', $usuario_entrada);
-        $stmt->execute();
+            $sql = "SELECT iduser, senha_criptografada, nivel FROM usuarios WHERE usuario = :usuario";
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindParam(':usuario', $usuario_entrada);
+            $stmt->execute();
 
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($row) {
-            if (password_verify($senha_entrada, $row['senha_criptografada'])) {
+            if ($row && password_verify($senha_entrada, $row['senha_criptografada'])) {
                 // Senha correta, usuário autenticado
                 $_SESSION['usuario'] = $usuario_entrada;
                 $_SESSION['iduser'] = $row['iduser'];
@@ -42,20 +46,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 exit();
             } else {
                 // Senha incorreta
-                echo "<script>alert('Senha incorreta.');</script>";
+                echo "<script>alert('Usuário ou senha incorretos.');</script>";
             }
-        } else {
-            // Usuário não encontrado
-            echo "<script>alert('Usuário não encontrado.');</script>";
+        } catch (PDOException $e) {
+            // Registrar erros em um arquivo de log
+            error_log("Erro: " . $e->getMessage(), 0);
+            echo "<script>alert('Ocorreu um erro durante a autenticação.');</script>";
         }
-    } catch (PDOException $e) {
-        echo "Erro: " . $e->getMessage();
     }
 }
 ?>
-
-
-
 
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -64,11 +64,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>    
-    <form class="form" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+    <form class="form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
         <div class="card">
             <div class="card_top">
                 <h1 class="titulo">Seja bem-vindo ao sistema!</h1>

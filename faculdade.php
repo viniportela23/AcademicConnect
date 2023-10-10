@@ -62,7 +62,10 @@ if (isset($_SESSION['iduser'])) {
                 <a class="nav-link" href="faculdade.php">Faculdades</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Contato</a>
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
             </li>
         </ul>
     </div>

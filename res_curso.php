@@ -13,26 +13,54 @@ if ($conn->connect_error) {
 
 // Verificar se um parâmetro 'idcurso' está presente na URL
 if (isset($_GET['idcurso'])) {
-    $idcurso = $_GET['idcurso'];
+    $idcurso = intval($_GET['idcurso']); // Converter para um valor inteiro
 
-    // Consulta SQL para obter os detalhes do curso selecionado, incluindo o nome do coordenador
-    $sql_curso = "SELECT cursos.*, colaborador.nome AS nome_coordenador 
+    // Consulta SQL com declaração preparada
+    $sql_curso = "SELECT cursos.*, aluno.nome AS nome_lider, GROUP_CONCAT(colaborador_prof.nome) AS professores
                   FROM cursos 
-                  LEFT JOIN colaborador ON cursos.idcordenador = colaborador.idcolabora 
-                  WHERE idcurso = $idcurso";
-    $result_curso = $conn->query($sql_curso);
+                  LEFT JOIN aluno ON cursos.idlider = aluno.idaluno
+                  LEFT JOIN participa ON cursos.idcurso = participa.idcurso
+                  LEFT JOIN colaborador AS colaborador_prof ON participa.idcolabora = colaborador_prof.idcolabora AND participa.funcao = 1
+                  WHERE cursos.idcurso = ?
+                  GROUP BY cursos.idcurso";
+    
+    $stmt = $conn->prepare($sql_curso);
+    $stmt->bind_param("i", $idcurso);
+    $stmt->execute();
+    $result_curso = $stmt->get_result();
 
     if ($result_curso->num_rows > 0) {
         $row_curso = $result_curso->fetch_assoc();
         $curso_nome = $row_curso['nome'];
         $curso_descricao = $row_curso['descricao'];
         $curso_foto = $row_curso['foto'];
-        $nome_coordenador = $row_curso['nome_coordenador'];
+        $nome_lider = $row_curso['nome_lider'];
+        $professores = $row_curso['professores'];
     } else {
         echo "Curso não encontrado.";
         exit;
     }
+
+    // Consulta adicional (a que você forneceu)
+    $sql_adicional = "SELECT coordenador.nome AS coordenador
+                      FROM participa AS participa_colaborador
+                      LEFT JOIN participa AS participa_coordenador ON participa_colaborador.idcurso = participa_coordenador.idcurso AND participa_coordenador.funcao = 2
+                      LEFT JOIN colaborador AS coordenador ON participa_coordenador.idcolabora = coordenador.idcolabora
+                      WHERE participa_colaborador.idcurso = ?";
+    
+    $stmt_adicional = $conn->prepare($sql_adicional);
+    $stmt_adicional->bind_param("i", $idcurso);
+    $stmt_adicional->execute();
+    $result_adicional = $stmt_adicional->get_result();
+
+    if ($result_adicional->num_rows > 0) {
+        $row_adicional = $result_adicional->fetch_assoc();
+        $coordenador = $row_adicional['coordenador'];
+    } else {
+        $coordenador = "Nenhum coordenador encontrado.";
+    }
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -58,9 +86,11 @@ if (isset($_GET['idcurso'])) {
                 <a class="nav-link" href="faculdade.php">Faculdades</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Contato</a>
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
             </li>
-        </ul>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
+            </li>        </ul>
     </div>
 </nav>
 
@@ -71,9 +101,9 @@ if (isset($_GET['idcurso'])) {
             if (isset($curso_nome) && isset($curso_descricao)) {
                 echo "<h3>$curso_nome</h3>";
                 echo "<p>$curso_descricao</p>";
-                if (isset($nome_coordenador)) {
-                    echo "<p>Coordenador: $nome_coordenador</p>";
-                }
+                echo "<p>Coordenador: $coordenador</p>";
+                echo "<p>Professores: $professores</p>";
+                echo "<p>Líder: $nome_lider</p>";
             } else {
                 echo "Nenhum curso selecionado.";
             }

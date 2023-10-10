@@ -54,13 +54,16 @@ if (isset($_GET['idaluno'])) {
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
             <li class="nav-item active">
-                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="home.php">Home <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="faculdade.php">Faculdade</a>
+                <a class="nav-link" href="faculdade.php">Faculdades</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Contato</a>
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
             </li>
         </ul>
     </div>
@@ -71,14 +74,17 @@ if (isset($_GET['idaluno'])) {
         <div class="col-md-8">
             <?php
             if (isset($aluno_nome)) {
-                echo "<h3>Informações do Aluno</h3>";
-                echo "<p>Nome: $aluno_nome</p>";
-                echo "<p>Matrícula: $aluno_matricula</p>";
-                echo "<p>Ano de Início: $aluno_ano_inicio</p>";
-                echo "<p>Data de Nascimento: $aluno_datanascimento</p>";
-                echo "<p>Cidade: $aluno_cidade</p>";
-                echo "<p>Descrição: $aluno_descricao</p>";
-                echo "<p>ID da Turma: $aluno_idturma</p>";
+            echo "<h3>Informações do Aluno</h3>";
+            echo "<ul class='list-group'>"; // Inicia a lista
+            echo "<li class='list-group-item'><strong>Nome:</strong> $aluno_nome</li>";
+            echo "<li class='list-group-item'><strong>Matrícula:</strong> $aluno_matricula</li>";
+            echo "<li class='list-group-item'><strong>Ano de Início:</strong> $aluno_ano_inicio</li>";
+            echo "<li class='list-group-item'><strong>Data de Nascimento:</strong> $aluno_datanascimento</li>";
+            echo "<li class='list-group-item'><strong>Cidade:</strong> $aluno_cidade</li>";
+            echo "<li class='list-group-item'><strong>Descrição:</strong> $aluno_descricao</li>";
+            echo "<li class='list-group-item'><strong>ID da Turma:</strong> $aluno_idturma</li>";
+            echo "</ul>"; // Fecha a lista
+
                 // Adicione aqui outras informações do aluno que deseja exibir
             } else {
                 echo "Nenhum aluno selecionado.";

@@ -20,32 +20,26 @@ if (isset($_SESSION['iduser'])) {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
-    // Verifica se um parâmetro 'idfacul' está presente na URL (foi clicado em uma faculdade)
-    if (isset($_GET['idfacul'])) {
-        $idfacul = $_GET['idfacul'];
+    // Verificar se um parâmetro 'idcolabora' está presente na URL
+    if (isset($_GET['idcolabora'])) {
+        $idcolabora = $_GET['idcolabora'];
 
-        // Consulta SQL para obter os cursos da faculdade selecionada
-        $sql_cursos = "SELECT * FROM colaborador WHERE idfacul = $idfacul";
-        $result_cursos = $conn->query($sql_cursos);
+        // Consulta SQL para obter as informações do colaborador
+        $sql_colaborador = "SELECT * FROM colaborador WHERE idcolabora = $idcolabora";
+        $result_colaborador = $conn->query($sql_colaborador);
 
-        if ($result_cursos->num_rows > 0) {
-            $cursos = array();
-            while ($row_curso = $result_cursos->fetch_assoc()) {
-                $cursos[] = $row_curso['nome'];
-            }
-        } else {
-            $cursos = array("Nenhum curso encontrado para esta faculdade.");
-        }
+        $conn->close();
     } else {
-        echo "ID da faculdade não especificado.";
+        echo "ID do colaborador não especificado.";
         exit;
     }
+}
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cursos da Faculdade</title>
+    <title>Detalhes do Colaborador</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -65,30 +59,51 @@ if (isset($_SESSION['iduser'])) {
                 <a class="nav-link" href="faculdade.php">Faculdades</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Contato</a>
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
             </li>
         </ul>
     </div>
 </nav>
 
 <div class="container mt-4">
-    <h3>Cursos da Faculdade Selecionada</h3>
-    <ul class="list-group">
+    <div class="row">
         <?php
-        foreach ($cursos as $curso) {
-            echo "<li class='list-group-item'>$curso</li>";
+        if ($result_colaborador->num_rows > 0) {
+            $row_colaborador = $result_colaborador->fetch_assoc();
+            ?>
+            <div class="col-md-8">
+                <h3>Informações do Colaborador</h3>
+                <ul class="list-group">
+                    <?php
+                    foreach ($row_colaborador as $key => $value) {
+                        if ($key != "idcolabora" && $key != "foto") {
+                            echo "<li class='list-group-item'><strong>$key:</strong> $value</li>";
+                        }
+                    }
+                    ?>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <?php
+                // Verifica se a imagem está definida e não é vazia
+                if (!empty($row_colaborador['foto'])) {
+                    echo "<img src='imagens/{$row_colaborador['foto']}' alt='Foto do Colaborador' class='img-fluid'>";
+                } else {
+                    echo "Nenhuma imagem disponível para este colaborador.";
+                }
+                ?>
+            </div>
+            <?php
+        } else {
+            echo "Nenhum colaborador encontrado com o ID especificado.";
         }
         ?>
-    </ul>
+    </div>
 </div>
 
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-
-<?php
-    $conn->close();
-} else {
-    echo "ID do usuário não encontrado.";
-}
-?>

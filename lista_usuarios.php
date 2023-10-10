@@ -12,22 +12,22 @@
       <span class="navbar-toggler-icon"></span>
     </button>
     <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item active">
-          <a class="nav-link" href="home.php">Home <span class="sr-only">(current)</span></a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Usuários</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="chatgpt_professor.php">Chat GPT</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Contato</a>
-        </li>
-      </ul>
+        <ul class="navbar-nav">
+            <li class="nav-item active">
+                <a class="nav-link" href="home.php">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="faculdade.php">Faculdades</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
+            </li>
+        </ul>
     </div>
-  </nav>
+</nav>
 
   <div class="container">
     <h1 class="mt-4">Lista de Usuários</h1>
@@ -79,7 +79,7 @@
       </table>
     </div>
 
-    <a class="btn btn-primary mt-4" href="adicionar_usuario.php" role="button">Adicionar Novo Usuário</a>
+    <a class="btn btn-primary mt-4" href="add_usuario.php" role="button">Adicionar Novo Usuário</a>
   </div>
 
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

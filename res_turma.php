@@ -57,9 +57,11 @@ if (isset($_GET['idturma'])) {
                 <a class="nav-link" href="faculdade.php">Faculdades</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Contato</a>
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
             </li>
-        </ul>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
+            </li>        </ul>
     </div>
 </nav>
 
@@ -90,13 +92,7 @@ if (isset($_GET['idturma'])) {
     
     <div class="row mt-4">
         <div class="col-md-4">
-            <a href="turma.php?idturma=<?php echo $idturma; ?>" class="btn btn-primary btn-block">Detalhes da Turma</a>
-        </div>
-        <div class="col-md-4">
             <a href="alunos.php?idturma=<?php echo $idturma; ?>" class="btn btn-primary btn-block">Alunos da Turma</a>
-        </div>
-        <div class="col-md-4">
-            <a href="colaboradores.php?idturma=<?php echo $idturma; ?>" class="btn btn-primary btn-block">Colaboradores da Turma</a>
         </div>
     </div>
 </div>

@@ -24,6 +24,9 @@ if (isset($_GET['idfacul'])) {
         $faculdade_nome = $row_faculdade['nome'];
         $faculdade_descricao = $row_faculdade['descricao'];
         $faculdade_foto = $row_faculdade['foto'];
+        $diretor = $row_faculdade['diretor'];
+        $ano_fundacao = $row_faculdade['ano_fundacao'];
+
     } else {
         echo "Faculdade não encontrada.";
         exit;
@@ -48,15 +51,17 @@ if (isset($_GET['idfacul'])) {
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav">
             <li class="nav-item active">
-                <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="home.php">Home <span class="sr-only">(current)</span></a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="faculdade.php">Faculdade</a>
+                <a class="nav-link" href="faculdade.php">Faculdades</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">Contato</a>
+                <a class="nav-link" href="pagina_de_busca.php">Busca</a>
             </li>
-        </ul>
+            <li class="nav-item">
+                <a class="nav-link" href="inserir_dados.php">Adicionar</a>
+            </li>        </ul>
     </div>
 </nav>
 
@@ -66,7 +71,10 @@ if (isset($_GET['idfacul'])) {
             <?php
             if (isset($faculdade_nome) && isset($faculdade_descricao)) {
                 echo "<h3>$faculdade_nome</h3>";
-                echo "<p>$faculdade_descricao</p>";
+                echo "<p>Drecrição:$faculdade_descricao</p>";
+                echo "<p>Diretor:$diretor</p>";
+                echo "<p>Ano de Fundação:$ano_fundacao</p>";
+
             } else {
                 echo "Nenhuma faculdade selecionada.";
             }
