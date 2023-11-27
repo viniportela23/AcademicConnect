@@ -15,9 +15,5 @@ if ($nivel == 1) {
 } elseif ($nivel == 2) {
     header("Location: home_professor.php");
     exit();
-} else {
-    // Nível inválido
-    header("Location: tente-novamente.php");
-    exit();
 }
 ?>
