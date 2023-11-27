@@ -20,56 +20,72 @@ if (isset($_SESSION['iduser'])) {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
-    // Função para obter o idaluno com base no nome do aluno
+    // Função para obter o idaluno com base no nome do aluno usando declaração preparada
     function getIdAluno($conn, $nomeAluno) {
-        // Consulta SQL para obter o idaluno com base no nome do aluno
-        $sql = "SELECT idaluno FROM aluno WHERE nome = '$nomeAluno'";
+        // Consulta SQL preparada para obter o idaluno com base no nome do aluno
+        $sql = "SELECT idaluno FROM aluno WHERE nome = ?";
         
-        // Executa a consulta
-        $result = $conn->query($sql);
+        // Preparar a declaração
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('s', $nomeAluno);
         
-        // Verifica se há resultados e retorna o idaluno
-        if ($result->num_rows > 0) {
-            $row = $result->fetch_assoc();
-            return $row['idaluno'];
-        } else {
-            return null;
-        }
+        // Executar a consulta
+        $stmt->execute();
+        
+        // Obter resultados
+        $stmt->bind_result($idaluno);
+        $stmt->fetch();
+        
+        // Fechar a declaração
+        $stmt->close();
+
+        return $idaluno;
     }
 
-    // Verificar o tipo de ID recebido (idturma, idcurso, idfacul)
+    // Verificar o tipo de ID recebido (idturma, idcurso, idfacul) usando declarações preparadas
     if (isset($_GET['idturma'])) {
         // ID é do tipo idturma
         $idturma = $_GET['idturma'];
 
-        // Consulta SQL para obter alunos com base no idturma
-        $sql = "SELECT aluno.nome FROM aluno WHERE aluno.idturma = $idturma";
+        // Consulta SQL preparada para obter alunos com base no idturma
+        $sql = "SELECT aluno.nome FROM aluno WHERE aluno.idturma = ?";
     } elseif (isset($_GET['idcurso'])) {
         // ID é do tipo idcurso
         $idcurso = $_GET['idcurso'];
 
-        // Consulta SQL para obter alunos com base no idcurso
+        // Consulta SQL preparada para obter alunos com base no idcurso
         $sql = "SELECT aluno.nome
                 FROM aluno
                 INNER JOIN turmas ON aluno.idturma = turmas.idturma
-                WHERE turmas.idcurso = $idcurso";
+                WHERE turmas.idcurso = ?";
     } elseif (isset($_GET['idfacul'])) {
         // ID é do tipo idfacul
         $idfacul = $_GET['idfacul'];
 
-        // Consulta SQL para obter alunos com base no idfacul
+        // Consulta SQL preparada para obter alunos com base no idfacul
         $sql = "SELECT aluno.nome
                 FROM aluno
                 INNER JOIN turmas ON aluno.idturma = turmas.idturma
                 INNER JOIN cursos ON turmas.idcurso = cursos.idcurso
-                WHERE cursos.idfacul = $idfacul";
+                WHERE cursos.idfacul = ?";
     } else {
         echo "Tipo de ID não especificado.";
         exit;
     }
 
-    // Executar a consulta SQL
-    $result = $conn->query($sql);
+    // Executar a consulta SQL usando declaração preparada
+    $stmt = $conn->prepare($sql);
+    
+    if (isset($idturma)) {
+        $stmt->bind_param('i', $idturma);
+    } elseif (isset($idcurso)) {
+        $stmt->bind_param('i', $idcurso);
+    } elseif (isset($idfacul)) {
+        $stmt->bind_param('i', $idfacul);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result->num_rows > 0) {
         $alunos = array();
@@ -133,6 +149,8 @@ if (isset($_SESSION['iduser'])) {
 </html>
 
 <?php
+    // Fechar a conexão e a declaração
+    $stmt->close();
     $conn->close();
 } else {
     echo "ID do usuário não encontrado.";

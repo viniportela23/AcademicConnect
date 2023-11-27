@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         echo "<script>alert('Usuário e senha são obrigatórios.');</script>";
     } else {
         try {
-            $pdo = new PDO("mysql:dbname=".$banco.";host=".$endereco, $usuario, $senha);
+            $pdo = new PDO("mysql:host=".$endereco.";dbname=".$banco, $usuario, $senha);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
             $sql = "SELECT iduser, senha_criptografada, nivel FROM usuarios WHERE usuario = :usuario";
@@ -37,13 +37,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $nivel = $row['nivel'];
                 if ($nivel == 1) {
                     header("Location: home_aluno.php");
+                    exit();
                 } elseif ($nivel == 2) {
                     header("Location: home_professor.php");
+                    exit();
                 } else {
                     // Nível inválido
                     echo "<script>alert('Nível de usuário inválido.');</script>";
                 }
-                exit();
             } else {
                 // Senha incorreta
                 echo "<script>alert('Usuário ou senha incorretos.');</script>";

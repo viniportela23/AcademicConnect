@@ -20,22 +20,45 @@ if (isset($_SESSION['iduser'])) {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
+    // Função para evitar injeção de SQL e XSS
+    function validateInput($input) {
+        return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+    }
+
     // Verifica se um parâmetro 'idfacul' está presente na URL (foi clicado em uma faculdade)
     if (isset($_GET['idfacul'])) {
-        $idfacul = $_GET['idfacul'];
+        $idfacul = validateInput($_GET['idfacul']);
 
-        // Consulta SQL para obter os cursos da faculdade selecionada
-        $sql_cursos = "SELECT * FROM cursos WHERE idfacul = $idfacul";
-        $result_cursos = $conn->query($sql_cursos);
+        // Consulta SQL preparada para obter os cursos da faculdade selecionada
+        $sql_cursos = "SELECT * FROM cursos WHERE idfacul = ?";
+        
+        // Preparar a declaração
+        $stmt_cursos = $conn->prepare($sql_cursos);
 
-        if ($result_cursos->num_rows > 0) {
-            $cursos = array();
-            while ($row_curso = $result_cursos->fetch_assoc()) {
-                $idcurso = $row_curso['idcurso'];
-                $cursos[$idcurso] = $row_curso['nome'];
+        if ($stmt_cursos) {
+            // Vincular o parâmetro
+            $stmt_cursos->bind_param('i', $idfacul);
+
+            // Executar a consulta
+            $stmt_cursos->execute();
+
+            // Obter resultados
+            $result_cursos = $stmt_cursos->get_result();
+
+            if ($result_cursos->num_rows > 0) {
+                $cursos = array();
+                while ($row_curso = $result_cursos->fetch_assoc()) {
+                    $idcurso = $row_curso['idcurso'];
+                    $cursos[$idcurso] = $row_curso['nome'];
+                }
+            } else {
+                $cursos = array("Nenhum curso encontrado para esta faculdade.");
             }
+
+            // Fechar a declaração
+            $stmt_cursos->close();
         } else {
-            $cursos = array("Nenhum curso encontrado para esta faculdade.");
+            die("Erro na preparação da consulta SQL: " . $conn->error);
         }
     } else {
         echo "ID da faculdade não especificado.";
@@ -71,9 +94,6 @@ if (isset($_SESSION['iduser'])) {
             <li class="nav-item">
                 <a class="nav-link" href="inserir_dados.php">Adicionar</a>
             </li>
-      </ul>
-    </div>
-  </nav>
         </ul>
     </div>
 </nav>

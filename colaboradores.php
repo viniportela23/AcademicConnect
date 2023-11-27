@@ -20,52 +20,64 @@ if (isset($_SESSION['iduser'])) {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
+    // Função para evitar injeção de SQL
+    function validateInput($input) {
+        return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+    }
+
     // Verificar se um parâmetro 'idfacul' ou 'idcurso' está presente na URL
     if (isset($_GET['idfacul'])) {
-        $idfacul = $_GET['idfacul'];
+        $idfacul = validateInput($_GET['idfacul']);
 
-        // Consulta SQL para obter os colaboradores da faculdade selecionada
-        $sql_colaboradores = "SELECT * FROM colaborador WHERE idcolabora IN (SELECT idcolabora FROM participa WHERE idcurso IN (SELECT idcurso FROM cursos WHERE idfacul = $idfacul))";
-        $result_colaboradores = $conn->query($sql_colaboradores);
-
-        if (!$result_colaboradores) {
-            die("Erro na consulta SQL: " . $conn->error);
-        }
-
-        if ($result_colaboradores->num_rows > 0) {
-            $colaboradores = array();
-            while ($row_colaborador = $result_colaboradores->fetch_assoc()) {
-                $idcolabora = $row_colaborador['idcolabora'];
-                $nomecolabora = $row_colaborador['nome'];
-                $colaboradores[] = "<a href='res_colab.php?idcolabora=$idcolabora'>$nomecolabora</a>";
-            }
-        } else {
-            $colaboradores = array("Nenhum colaborador encontrado para esta faculdade.");
-        }
+        // Consulta SQL preparada para obter os colaboradores da faculdade selecionada
+        $sql_colaboradores = "SELECT * FROM colaborador WHERE idcolabora IN (SELECT idcolabora FROM participa WHERE idcurso IN (SELECT idcurso FROM cursos WHERE idfacul = ?))";
+        
     } elseif (isset($_GET['idcurso'])) {
-        $idcurso = $_GET['idcurso'];
+        $idcurso = validateInput($_GET['idcurso']);
 
-        // Consulta SQL para obter os colaboradores do curso selecionado
-        $sql_colaboradores = "SELECT * FROM colaborador WHERE idcolabora IN (SELECT idcolabora FROM participa WHERE idcurso = $idcurso)";
-        $result_colaboradores = $conn->query($sql_colaboradores);
-
-        if (!$result_colaboradores) {
-            die("Erro na consulta SQL: " . $conn->error);
-        }
-
-        if ($result_colaboradores->num_rows > 0) {
-            $colaboradores = array();
-            while ($row_colaborador = $result_colaboradores->fetch_assoc()) {
-                $idcolabora = $row_colaborador['idcolabora'];
-                $nomecolabora = $row_colaborador['nome'];
-                $colaboradores[] = "<a href='res_colab.php?idcolabora=$idcolabora'>$nomecolabora</a>";
-            }
-        } else {
-            $colaboradores = array("Nenhum colaborador encontrado para este curso.");
-        }
+        // Consulta SQL preparada para obter os colaboradores do curso selecionado
+        $sql_colaboradores = "SELECT * FROM colaborador WHERE idcolabora IN (SELECT idcolabora FROM participa WHERE idcurso = ?)";
     } else {
         echo "ID da faculdade ou curso não especificado.";
         exit;
+    }
+
+    // Preparar a declaração
+    $stmt_colaboradores = $conn->prepare($sql_colaboradores);
+
+    if ($stmt_colaboradores) {
+        // Vincular os parâmetros
+        if (isset($idfacul)) {
+            $stmt_colaboradores->bind_param('i', $idfacul);
+        } elseif (isset($idcurso)) {
+            $stmt_colaboradores->bind_param('i', $idcurso);
+        }
+
+        // Executar a consulta
+        $stmt_colaboradores->execute();
+
+        // Obter resultados
+        $result_colaboradores = $stmt_colaboradores->get_result();
+
+        if (!$result_colaboradores) {
+            die("Erro na consulta SQL: " . $conn->error);
+        }
+
+        if ($result_colaboradores->num_rows > 0) {
+            $colaboradores = array();
+            while ($row_colaborador = $result_colaboradores->fetch_assoc()) {
+                $idcolabora = $row_colaborador['idcolabora'];
+                $nomecolabora = $row_colaborador['nome'];
+                $colaboradores[] = "<a href='res_colab.php?idcolabora=$idcolabora'>$nomecolabora</a>";
+            }
+        } else {
+            $colaboradores = array("Nenhum colaborador encontrado.");
+        }
+
+        // Fechar a declaração
+        $stmt_colaboradores->close();
+    } else {
+        die("Erro na preparação da consulta SQL: " . $conn->error);
     }
 ?>
 

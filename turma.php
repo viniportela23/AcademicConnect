@@ -22,11 +22,21 @@ if (isset($_SESSION['iduser'])) {
 
     // Verificar se um parâmetro 'idcurso' está presente na URL
     if (isset($_GET['idcurso'])) {
-        $idcurso = $_GET['idcurso'];
+        // Validar e limpar a entrada do usuário
+        $idcurso = filter_var($_GET['idcurso'], FILTER_VALIDATE_INT);
 
-        // Consulta SQL para obter as turmas relacionadas ao curso
-        $sql_turmas = "SELECT * FROM turmas WHERE idcurso = $idcurso";
-        $result_turmas = $conn->query($sql_turmas);
+        // Verificar se $idcurso é um número inteiro válido
+        if ($idcurso === false) {
+            echo "ID do curso inválido.";
+            exit;
+        }
+
+        // Consulta SQL para obter as turmas relacionadas ao curso usando declaração preparada
+        $sql_turmas = "SELECT * FROM turmas WHERE idcurso = ?";
+        $stmt_turmas = $conn->prepare($sql_turmas);
+        $stmt_turmas->bind_param("i", $idcurso);
+        $stmt_turmas->execute();
+        $result_turmas = $stmt_turmas->get_result();
 
         $turmas = array();
         if ($result_turmas->num_rows > 0) {
@@ -97,6 +107,7 @@ if (isset($_SESSION['iduser'])) {
 </html>
 
 <?php
+    $stmt_turmas->close();
     $conn->close();
 } else {
     echo "ID do usuário não encontrado.";

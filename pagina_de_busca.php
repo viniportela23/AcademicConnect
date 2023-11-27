@@ -26,43 +26,53 @@ if (isset($_POST['buscar'])) {
     $tipo_pesquisa = $_POST['tipo_pesquisa'];
 
     // Consulta SQL para buscar com base no tipo de pesquisa
-$sql = "";
-switch ($tipo_pesquisa) {
-    case "curso":
-        $sql = "SELECT idcurso AS id, nome FROM cursos WHERE nome LIKE '%$busca%'";
-        $pagina_res = 'res_curso.php';
-        $idtabela = 'idcurso';
-        break;
-    case "turma":
-        $sql = "SELECT idturma AS id, nome FROM turmas WHERE nome LIKE '%$busca%'";
-        $pagina_res = 'res_turma.php';
-        $idtabela = 'idturma';
-        break;
-    case "aluno":
-        $sql = "SELECT idaluno AS id, nome FROM aluno WHERE nome LIKE '%$busca%'";
-        $pagina_res = 'res_aluno.php';
-        $idtabela = 'idaluno';
-        break;
-    case "colaborador":
-        $sql = "SELECT idcolabora AS id, nome FROM colaborador WHERE nome LIKE '%$busca%'";
-        $pagina_res = 'res_colab.php';
-        $idtabela = 'idcolabora';
-        break;
-    case "faculdade":
-        $sql = "SELECT idfacul AS id, nome FROM faculdade WHERE nome LIKE '%$busca%'";
-        $pagina_res = 'res_facul.php';
-        $idtabela = 'idfacul';
-        break;
-    default:
-        // Tipo de pesquisa desconhecido, você pode lidar com isso de acordo com suas necessidades
-        break;
-}
+    $sql = "";
+    switch ($tipo_pesquisa) {
+        case "curso":
+            $sql = "SELECT idcurso AS id, nome FROM cursos WHERE nome LIKE ?";
+            $pagina_res = 'res_curso.php';
+            $idtabela = 'idcurso';
+            break;
+        case "turma":
+            $sql = "SELECT idturma AS id, nome FROM turmas WHERE nome LIKE ?";
+            $pagina_res = 'res_turma.php';
+            $idtabela = 'idturma';
+            break;
+        case "aluno":
+            $sql = "SELECT idaluno AS id, nome FROM aluno WHERE nome LIKE ?";
+            $pagina_res = 'res_aluno.php';
+            $idtabela = 'idaluno';
+            break;
+        case "colaborador":
+            $sql = "SELECT idcolabora AS id, nome FROM colaborador WHERE nome LIKE ?";
+            $pagina_res = 'res_colab.php';
+            $idtabela = 'idcolabora';
+            break;
+        case "faculdade":
+            $sql = "SELECT idfacul AS id, nome FROM faculdade WHERE nome LIKE ?";
+            $pagina_res = 'res_facul.php';
+            $idtabela = 'idfacul';
+            break;
+        default:
+            // Tipo de pesquisa desconhecido, você pode lidar com isso de acordo com suas necessidades
+            break;
+    }
 
-$result = $conn->query($sql);
-
-
+    // Usar instruções preparadas para evitar injeção SQL
+    $stmt = $conn->prepare($sql);
+    if ($stmt) {
+        // Adicionar o caractere '%' ao redor do termo de busca
+        $buscaParam = "%$busca%";
+        $stmt->bind_param("s", $buscaParam);
+        $stmt->execute();
+        $result = $stmt->get_result();
+    } else {
+        echo "Erro na preparação da declaração SQL.";
+    }
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html>

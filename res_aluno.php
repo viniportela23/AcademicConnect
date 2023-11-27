@@ -15,9 +15,12 @@ if ($conn->connect_error) {
 if (isset($_GET['idaluno'])) {
     $idaluno = $_GET['idaluno'];
 
-    // Consulta SQL para obter os dados do aluno selecionado
-    $sql_aluno = "SELECT * FROM aluno WHERE idaluno = $idaluno";
-    $result_aluno = $conn->query($sql_aluno);
+    // Consulta SQL para obter os dados do aluno selecionado usando instruções preparadas
+    $sql_aluno = "SELECT * FROM aluno WHERE idaluno = ?";
+    $stmt = $conn->prepare($sql_aluno);
+    $stmt->bind_param("i", $idaluno);
+    $stmt->execute();
+    $result_aluno = $stmt->get_result();
 
     if ($result_aluno->num_rows > 0) {
         $row_aluno = $result_aluno->fetch_assoc();

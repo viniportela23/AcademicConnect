@@ -20,21 +20,44 @@ if (isset($_SESSION['iduser'])) {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
+    // Função para evitar injeção de SQL e XSS
+    function validateInput($input) {
+        return htmlspecialchars($input, ENT_QUOTES, 'UTF-8');
+    }
+
     // Verifica se um parâmetro 'idfacul' está presente na URL (foi clicado em uma faculdade)
     if (isset($_GET['idfacul'])) {
-        $idfacul = $_GET['idfacul'];
+        $idfacul = validateInput($_GET['idfacul']);
 
-        // Consulta SQL para obter os dados da faculdade selecionada
-        $sql_faculdade = "SELECT * FROM faculdade WHERE idfacul = $idfacul";
-        $result_faculdade = $conn->query($sql_faculdade);
+        // Consulta SQL preparada para obter os dados da faculdade selecionada
+        $sql_faculdade = "SELECT * FROM faculdade WHERE idfacul = ?";
+        
+        // Preparar a declaração
+        $stmt_faculdade = $conn->prepare($sql_faculdade);
 
-        if ($result_faculdade->num_rows > 0) {
-            $row_faculdade = $result_faculdade->fetch_assoc();
-            $faculdade_nome = $row_faculdade['nome'];
-            $faculdade_descricao = $row_faculdade['descricao'];
+        if ($stmt_faculdade) {
+            // Vincular o parâmetro
+            $stmt_faculdade->bind_param('i', $idfacul);
+
+            // Executar a consulta
+            $stmt_faculdade->execute();
+
+            // Obter resultados
+            $result_faculdade = $stmt_faculdade->get_result();
+
+            if ($result_faculdade->num_rows > 0) {
+                $row_faculdade = $result_faculdade->fetch_assoc();
+                $faculdade_nome = $row_faculdade['nome'];
+                $faculdade_descricao = $row_faculdade['descricao'];
+            } else {
+                echo "Faculdade não encontrada.";
+                exit;
+            }
+
+            // Fechar a declaração
+            $stmt_faculdade->close();
         } else {
-            echo "Faculdade não encontrada.";
-            exit;
+            die("Erro na preparação da consulta SQL: " . $conn->error);
         }
     }
 ?>

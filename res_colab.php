@@ -24,9 +24,12 @@ if (isset($_SESSION['iduser'])) {
     if (isset($_GET['idcolabora'])) {
         $idcolabora = $_GET['idcolabora'];
 
-        // Consulta SQL para obter as informações do colaborador
-        $sql_colaborador = "SELECT * FROM colaborador WHERE idcolabora = $idcolabora";
-        $result_colaborador = $conn->query($sql_colaborador);
+        // Consulta SQL para obter as informações do colaborador usando instruções preparadas
+        $sql_colaborador = "SELECT * FROM colaborador WHERE idcolabora = ?";
+        $stmt = $conn->prepare($sql_colaborador);
+        $stmt->bind_param("i", $idcolabora);
+        $stmt->execute();
+        $result_colaborador = $stmt->get_result();
 
         $conn->close();
     } else {

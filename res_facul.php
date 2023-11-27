@@ -13,11 +13,21 @@ if ($conn->connect_error) {
 
 // Verificar se um parâmetro 'idfacul' está presente na URL
 if (isset($_GET['idfacul'])) {
-    $idfacul = $_GET['idfacul'];
+    // Validar e limpar a entrada do usuário
+    $idfacul = filter_var($_GET['idfacul'], FILTER_VALIDATE_INT);
 
-    // Consulta SQL para obter os dados da faculdade selecionada
-    $sql_faculdade = "SELECT * FROM faculdade WHERE idfacul = $idfacul";
-    $result_faculdade = $conn->query($sql_faculdade);
+    // Verificar se $idfacul é um número inteiro válido
+    if ($idfacul === false) {
+        echo "ID da faculdade inválido.";
+        exit;
+    }
+
+    // Consulta SQL para obter os dados da faculdade selecionada usando declaração preparada
+    $sql_faculdade = "SELECT * FROM faculdade WHERE idfacul = ?";
+    $stmt_faculdade = $conn->prepare($sql_faculdade);
+    $stmt_faculdade->bind_param("i", $idfacul);
+    $stmt_faculdade->execute();
+    $result_faculdade = $stmt_faculdade->get_result();
 
     if ($result_faculdade->num_rows > 0) {
         $row_faculdade = $result_faculdade->fetch_assoc();
@@ -71,9 +81,9 @@ if (isset($_GET['idfacul'])) {
             <?php
             if (isset($faculdade_nome) && isset($faculdade_descricao)) {
                 echo "<h3>$faculdade_nome</h3>";
-                echo "<p>Drecrição:$faculdade_descricao</p>";
-                echo "<p>Diretor:$diretor</p>";
-                echo "<p>Ano de Fundação:$ano_fundacao</p>";
+                echo "<p>Drecrição: $faculdade_descricao</p>";
+                echo "<p>Diretor: $diretor</p>";
+                echo "<p>Ano de Fundação: $ano_fundacao</p>";
 
             } else {
                 echo "Nenhuma faculdade selecionada.";
@@ -106,8 +116,6 @@ if (isset($_GET['idfacul'])) {
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
-
-
 
 <?php
 $conn->close();

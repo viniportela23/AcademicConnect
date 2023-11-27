@@ -13,11 +13,21 @@ if ($conn->connect_error) {
 
 // Verificar se um parâmetro 'idturma' está presente na URL
 if (isset($_GET['idturma'])) {
-    $idturma = $_GET['idturma'];
+    // Validar e limpar a entrada do usuário
+    $idturma = filter_var($_GET['idturma'], FILTER_VALIDATE_INT);
 
-    // Consulta SQL para obter os detalhes da turma selecionada
-    $sql_turma = "SELECT * FROM turmas WHERE idturma = $idturma";
-    $result_turma = $conn->query($sql_turma);
+    // Verificar se $idturma é um número inteiro válido
+    if ($idturma === false) {
+        echo "ID da turma inválido.";
+        exit;
+    }
+
+    // Consulta SQL para obter os detalhes da turma selecionada usando declaração preparada
+    $sql_turma = "SELECT * FROM turmas WHERE idturma = ?";
+    $stmt_turma = $conn->prepare($sql_turma);
+    $stmt_turma->bind_param("i", $idturma);
+    $stmt_turma->execute();
+    $result_turma = $stmt_turma->get_result();
 
     if ($result_turma->num_rows > 0) {
         $row_turma = $result_turma->fetch_assoc();

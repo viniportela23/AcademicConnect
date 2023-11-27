@@ -13,7 +13,14 @@ if ($conn->connect_error) {
 
 // Verificar se um parâmetro 'idcurso' está presente na URL
 if (isset($_GET['idcurso'])) {
-    $idcurso = intval($_GET['idcurso']); // Converter para um valor inteiro
+    // Validar e limpar a entrada do usuário
+    $idcurso = filter_var($_GET['idcurso'], FILTER_VALIDATE_INT);
+
+    // Verificar se $idcurso é um número inteiro válido
+    if ($idcurso === false) {
+        echo "ID do curso inválido.";
+        exit;
+    }
 
     // Consulta SQL com declaração preparada
     $sql_curso = "SELECT cursos.*, aluno.nome AS nome_lider, GROUP_CONCAT(colaborador_prof.nome) AS professores
