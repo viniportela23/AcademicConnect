@@ -52,19 +52,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Insira os dados na tabela de alunos (substitua 'tabela_alunos' pelo nome da sua tabela)
+    // Usar consultas preparadas para evitar injeção SQL
     $sql = "INSERT INTO aluno (nome, matricula, ano_inicio, datanascimento, cidade, descricao, idusuario, idturma, foto)
-            VALUES ('$nome', '$matricula', '$ano_inicio', '$datanascimento', '$cidade', '$descricao', '$idusuario', '$idturma', '$foto_nome')";
-    
-    if ($conn->query($sql) === TRUE) {
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('sssssssss', $nome, $matricula, $ano_inicio, $datanascimento, $cidade, $descricao, $idusuario, $idturma, $foto_nome);
+
+    if ($stmt->execute()) {
         $mensagem = "Dados de aluno inseridos com sucesso.";
     } else {
         $mensagem = "Erro ao inserir dados de aluno: " . $conn->error;
     }
 
+    $stmt->close();
     $conn->close();
 }
 ?>
+
+
 
 <!DOCTYPE html>
 <html>
