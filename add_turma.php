@@ -23,21 +23,40 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Recupere os dados do formulário
     $nome = $_POST['nome'];
     $idcurso = $_POST['idcurso'];
-    $foto = $_POST['foto'];
     $ano_inicio = $_POST['ano_inicio'];
     $ano_fim = $_POST['ano_fim'];
     $turno = $_POST['turno'];
 
-    // Insira os dados na tabela de turma (substitua 'tabela_turma' pelo nome da sua tabela)
-    $sql = "INSERT INTO turmas (nome, idcurso, foto, ano_inicio, ano_fim, turno)
-            VALUES ('$nome', '$idcurso', '$foto', '$ano_inicio', '$ano_fim', '$turno')";
+    // Processar o upload da foto
+    $foto = $_FILES['foto'];
+    $foto_nome = "";
 
-    if ($conn->query($sql) === TRUE) {
-        $mensagem = "Dados da turma inseridos com sucesso.";
-    } else {
-        $mensagem = "Erro ao inserir dados da turma: " . $conn->error;
+    if ($foto['error'] === 0) {
+        $foto_info = getimagesize($foto['tmp_name']);
+        if ($foto_info !== false && $foto_info['mime'] === 'image/jpeg') {
+            // Gerar um nome aleatório para a foto
+            $foto_nome = uniqid() . '.jpg';
+            $foto_destino = 'imagens/' . $foto_nome;
+            move_uploaded_file($foto['tmp_name'], $foto_destino);
+        } else {
+            echo "A foto deve ser um arquivo JPEG.";
+            exit;
+        }
     }
 
+    // Use declarações preparadas para evitar injeção SQL
+    $stmt = $conn->prepare("INSERT INTO turmas (nome, idcurso, foto, ano_inicio, ano_fim, turno) VALUES (?, ?, ?, ?, ?, ?)");
+
+    // Vincular parâmetros
+    $stmt->bind_param('ssssss', $nome, $idcurso, $foto_nome, $ano_inicio, $ano_fim, $turno);
+
+    if ($stmt->execute()) {
+        $mensagem = "Dados da turma inseridos com sucesso.";
+    } else {
+        $mensagem = "Erro ao inserir dados da turma: " . $stmt->error;
+    }
+
+    $stmt->close();
     $conn->close();
 }
 ?>
@@ -72,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <div class="container mt-4">
     <h3>Inserir Dados da Turma</h3>
-    <form method="post" action="add_turma.php">
+    <form method="post" action="add_turma.php" enctype="multipart/form-data">
         <div class="form-group">
             <label for="nome">Nome:</label>
             <input type="text" class="form-control" id="nome" name="nome" required>

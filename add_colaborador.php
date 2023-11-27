@@ -20,13 +20,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
-    // Recupere os dados do formulário
-    $nome = $_POST['nome'];
-    $datanascimento = $_POST['datanascimento'];
-    $cidade = $_POST['cidade'];
-    $ano_inicio = $_POST['ano_inicio'];
-    $descricao = $_POST['descricao'];
-    $idusuario = $_POST['idusuario'];
+    // Recupere os dados do formulário e valide/filtre
+    $nome = mysqli_real_escape_string($conn, $_POST['nome']);
+    $datanascimento = mysqli_real_escape_string($conn, $_POST['datanascimento']);
+    $cidade = mysqli_real_escape_string($conn, $_POST['cidade']);
+    $ano_inicio = mysqli_real_escape_string($conn, $_POST['ano_inicio']);
+    $descricao = mysqli_real_escape_string($conn, $_POST['descricao']);
+    $idusuario = mysqli_real_escape_string($conn, $_POST['idusuario']);
 
     // Gerar um número aleatório de 10 dígitos como ID do colaborador
     $idcolaborador = mt_rand(1000000000, 9999999999);
@@ -49,19 +49,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Insira os dados na tabela de colaboradores (substitua 'tabela_colaboradores' pelo nome da sua tabela)
-    $sql = "INSERT INTO colaborador (nome, datanascimento, cidade, ano_inicio, descricao, iduser, foto)
-            VALUES ('$nome', '$datanascimento', '$cidade', '$ano_inicio', '$descricao', '$idusuario', '$foto_nome')";
-    
-    if ($conn->query($sql) === TRUE) {
+    // Usar consultas preparadas para evitar injeção SQL
+    $stmt = $conn->prepare("INSERT INTO colaborador (nome, datanascimento, cidade, ano_inicio, descricao, iduser, foto)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)");
+
+    $stmt->bind_param('sssssss', $nome, $datanascimento, $cidade, $ano_inicio, $descricao, $idusuario, $foto_nome);
+
+    if ($stmt->execute()) {
         $mensagem = "Dados de colaborador inseridos com sucesso.";
     } else {
         $mensagem = "Erro ao inserir dados de colaborador: " . $conn->error;
     }
 
+    $stmt->close();
     $conn->close();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html>

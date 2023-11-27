@@ -20,27 +20,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
-    // Recupere os dados do formulário
+    // Recupere os dados do formulário e use declarações preparadas
     $nome = $_POST['nome'];
     $descricao = $_POST['descricao'];
     $diretor = $_POST['diretor'];
     $ano_fundacao = $_POST['ano_fundacao'];
-    $idfacul = 23;
-
+    
     // Gerar um número aleatório de 10 dígitos como ID do curso
     $idfacul = mt_rand(1000000000, 9999999999);
+    
     // Processar o upload da foto
     $foto = $_FILES['foto'];
     $foto_nome = "";
+
     if ($foto['error'] === 0) {
-        // Verifique se o arquivo é uma imagem JPEG
         $foto_info = getimagesize($foto['tmp_name']);
         if ($foto_info !== false && $foto_info['mime'] === 'image/jpeg') {
-            // Renomear a foto com o ID do curso
-            $foto_nome = $idfacul . '.jpg'; // Adicione o idcurso ao nome
+            $foto_nome = $idfacul . '.jpg';
             $foto_destino = 'imagens/' . $foto_nome;
-
-            // Mova o arquivo para a pasta de destino
             move_uploaded_file($foto['tmp_name'], $foto_destino);
         } else {
             echo "A foto deve ser um arquivo JPEG.";
@@ -48,19 +45,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Insira os dados na tabela de cursos (substitua 'tabela_cursos' pelo nome da sua tabela)
-    $sql = "INSERT INTO faculdade (nome, descricao, ano_fundacao, diretor, foto)
-            VALUES ('$nome', '$descricao', '$diretor', '$ano_fundacao', '$foto_nome')";
+    // Use declarações preparadas para evitar injeção SQL
+    $stmt = $conn->prepare("INSERT INTO faculdade (nome, descricao, ano_fundacao, diretor, foto, idfacul) VALUES (?, ?, ?, ?, ?, ?)");
+    
+    $stmt->bind_param('sssssi', $nome, $descricao, $ano_fundacao, $diretor, $foto_nome, $idfacul);
 
-    if ($conn->query($sql) === TRUE) {
+    if ($stmt->execute()) {
         $mensagem = "Dados da Faculdade inseridos com sucesso.";
     } else {
         $mensagem = "Erro ao inserir dados da faculdade: " . $conn->error;
     }
 
+    $stmt->close();
     $conn->close();
 }
 ?>
+
 
 <!DOCTYPE html>
 <html>

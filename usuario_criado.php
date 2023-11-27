@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-require_once('credenciais_professor.php');
+require_once('credenciais_aluno.php');
 ?>
 
 <!DOCTYPE html>

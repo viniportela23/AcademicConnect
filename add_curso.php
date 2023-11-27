@@ -20,12 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         die("Erro na conexão com o banco de dados: " . $conn->connect_error);
     }
 
-    // Recupere os dados do formulário
-    $nome = $_POST['nome'];
-    $idfacul = $_POST['idfacul'];
-    $descricao = $_POST['descricao'];
-    $turno = $_POST['turno'];
-    $idlider = $_POST['idlider'];
+    // Recupere os dados do formulário e valide/filtre
+    $nome = mysqli_real_escape_string($conn, $_POST['nome']);
+    $idfacul = mysqli_real_escape_string($conn, $_POST['idfacul']);
+    $descricao = mysqli_real_escape_string($conn, $_POST['descricao']);
+    $turno = mysqli_real_escape_string($conn, $_POST['turno']);
+    $idlider = mysqli_real_escape_string($conn, $_POST['idlider']);
 
     // Gerar um número aleatório de 10 dígitos como ID do curso
     $idcurso = mt_rand(1000000000, 9999999999);
@@ -49,16 +49,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
 
-    // Insira os dados na tabela de cursos (substitua 'tabela_cursos' pelo nome da sua tabela)
-    $sql = "INSERT INTO cursos (nome, idfacul, descricao, turno, idlider, foto)
-            VALUES ('$nome', '$idfacul', '$descricao', '$turno', '$idlider', '$foto_nome')";
-    
-    if ($conn->query($sql) === TRUE) {
+    // Usar consultas preparadas para evitar injeção SQL
+    $stmt = $conn->prepare("INSERT INTO cursos (nome, idfacul, descricao, turno, idlider, foto)
+                            VALUES (?, ?, ?, ?, ?, ?)");
+
+    $stmt->bind_param('ssssss', $nome, $idfacul, $descricao, $turno, $idlider, $foto_nome);
+
+    if ($stmt->execute()) {
         $mensagem = "Dados de curso inseridos com sucesso.";
     } else {
         $mensagem = "Erro ao inserir dados de curso: " . $conn->error;
     }
 
+    $stmt->close();
     $conn->close();
 }
 ?>

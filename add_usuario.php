@@ -3,22 +3,22 @@ session_start();
 
 require_once('credenciais_aluno.php');
 
-
-    $credenciais = parse_ini_file("credenciais_banco.txt");
-    $endereco = $credenciais["host"];
-    $usuario = $credenciais["username"];
-    $senha = $credenciais["password"];
-    $banco = $credenciais["dbname"];
+$credenciais = parse_ini_file("credenciais_banco.txt");
+$endereco = $credenciais["host"];
+$usuario = $credenciais["username"];
+$senha = $credenciais["password"];
+$banco = $credenciais["dbname"];
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $usuario_entrada = $_POST["usuario"];
-    $senha_entrada = $_POST["senha"];
+    // Validar e filtrar os dados de entrada
+    $usuario_entrada = filter_var($_POST["usuario"], FILTER_SANITIZE_STRING);
+    $senha_entrada = filter_var($_POST["senha"], FILTER_SANITIZE_STRING);
 
-    $pdo = new PDO("mysql:dbname=".$banco.";host=".$endereco, $usuario, $senha);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
+    // Verificar se o usuário já existe
     try {
-        // Verificar se o usuário já existe
+        $pdo = new PDO("mysql:dbname=".$banco.";host=".$endereco, $usuario, $senha);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
         $verificar_sql = "SELECT * FROM usuarios WHERE usuario = :usuario";
         $verificar_stmt = $pdo->prepare($verificar_sql);
         $verificar_stmt->bindParam(':usuario', $usuario_entrada);
@@ -51,6 +51,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         }
     } catch (PDOException $e) {
         echo "Erro: " . $e->getMessage();
+        exit();  // Importante sair após um erro
     }
 }
 
@@ -66,18 +67,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <form class="form" method="post" action="<?php echo $_SERVER['PHP_SELF']; ?>">
+    <form class="form" method="post" action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>">
         <div class="card">
             <div class="card_top">
                 <h1 class="titulo">Adicione um usuário ao sistema!</h1>
             </div>
             <div class="texto2">
                 <label>Usuário:</label>
-                <input type="text" name="usuario" placeholder="Digite o nome de usuário">
+                <input type="text" name="usuario" placeholder="Digite o nome de usuário" required>
             </div>
             <div class="texto2">
                 <label>Senha:</label>
-                <input type="password" name="senha" placeholder="Digite a senha">
+                <input type="password" name="senha" placeholder="Digite a senha" required>
             </div>
             <div class="texto2 btn">
                 <button type="submit">Criar</button>
